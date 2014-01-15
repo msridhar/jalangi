@@ -281,8 +281,16 @@
 
 
     function printLineInfoAux(i, ast) {
-        if (ast && ast.loc) {
-            writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
+        if (ast) {
+            if (ast.loc) {
+                writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
+            } else if (ast.attr && ast.attr.pos) {
+                var pos = ast.attr.pos;
+                // TODO this dumps the start offset of the node rather than the column within the line; fix
+                writeLineToIIDMap('iids[' + i + '] = [filename,' + (pos.start_line) + "," + (pos.start_offset) + "];\n");
+            }
+
+
         }
 //        else {
 //            console.log(i+":undefined:undefined");
