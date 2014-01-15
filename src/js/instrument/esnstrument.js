@@ -1231,11 +1231,15 @@
     }
 
 
-    function transformString(code, visitorsPost, visitorsPre) {
+    function transformString(code, visitorsPost, visitorsPre, normalize) {
 //        console.time("parse")
 //        var newAst = esprima.parse(code, {loc:true, range:true});
         var newAst = acorn.parse(code, {locations:true, ranges:true});
 //        console.timeEnd("parse")
+        if (normalize) {
+            var normalizer = require("JS_WALA/normalizer/lib/normalizer.js");
+            newAst = normalizer.normalize(newAst);
+        }
 //        console.time("transform")
         addScopes(newAst);
         var len = visitorsPost.length;
@@ -1259,7 +1263,8 @@
      * Instruments the provided code.
      *
      * @param {string} code The code to instrument
-     * @param {{wrapProgram: boolean, filename: string, instFileName: string, serialize: boolean }} options
+     * @param {{wrapProgram: boolean, filename: string, instFileName: string, serialize: boolean,
+      *         normalize: boolean }} options
      *    Options for code generation:
      *      'wrapProgram': Should the instrumented code be wrapped with prefix code to load libraries,
      * code to indicate script entry and exit, etc.? should be false for code being eval'd
@@ -1270,7 +1275,8 @@
      *                 If not provided, and the filename parameter is provided, defaults to
      *                 filename_jalangi_.js.  We need this filename because it gets written
      *                 into the trace produced by the instrumented code during record
-            'serialize': Should a serialized representation of the AST be provided?
+     *      'serialize': Should a serialized representation of the AST be provided?
+     *      'normalize': Should the code be normalized using JS_WALA?
      * @return {{code:string, serializedAST: string}} an object whose 'code' property is the instrumented code string,
      * and whose 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
      * parameter was true
@@ -1281,7 +1287,8 @@
             tryCatchAtTop = options.wrapProgram,
             filename = options.filename,
             instFileName = options.instFileName,
-            serialize = options.serialize;
+            serialize = options.serialize,
+            normalize = options.normalize;
 
 		if (filename) {
 			// this works under the assumption that the app root directory,
@@ -1302,7 +1309,7 @@
                 condCount = 3;
             }
             wrapProgramNode = tryCatchAtTop;
-            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
+            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined], normalize);
             var newCode = escodegen.generate(newAst);
 
             if (!tryCatchAtTop) {
@@ -1359,7 +1366,7 @@
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
             writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(),instCodeFileName)) + "\";\n");
-            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
+            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined], true);
             //console.log(JSON.stringify(newAst, null, '\t'));
 
             var newFileOnly = path.basename(instCodeFileName);
