@@ -43,8 +43,11 @@ var dumpSerializedASTs = false;
 var jalangiRoot;
 
 // should we use relative paths in <script> tags for runtime libs?
-
 var relative = false;
+
+// should we normalize code using JS_WALA before instrumenting?
+var normalize = false;
+
 // should we store instrumented app directly in the output directory?
 var directInOutput = false;
 
@@ -67,7 +70,8 @@ function rewriteInlineScript(src, metadata) {
         wrapProgram: true,
         filename: origname,
         instFileName: instname,
-        serialize: dumpSerializedASTs
+        serialize: dumpSerializedASTs,
+        normalize: normalize
     };
 	var instResult = esnstrument.instrumentCode(src, options);
 	var instrumentedCode = instResult.code;
@@ -136,7 +140,8 @@ InstrumentJSStream.prototype._flush = function (cb) {
         wrapProgram: true,
         filename: this.origScriptName,
         instFileName: this.instScriptName,
-        serialize: dumpSerializedASTs
+        serialize: dumpSerializedASTs,
+        normalize: normalize
     };
 	var instResult = esnstrument.instrumentCode(this.data, options);
 	if (dumpSerializedASTs) {
@@ -210,6 +215,7 @@ parser.addArgument(['--jalangi_root'], { help: "Jalangi root directory, if not w
 parser.addArgument(['--direct_in_output'], { help: "Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' } );
 parser.addArgument(['--selenium'], { help: "Insert code so scripts can detect they are running under Selenium", action:'storeTrue' } );
 parser.addArgument(['--relative'], { help: "Use paths relative to working directory in injected <script> tags", action:'storeTrue' } );
+parser.addArgument(['--normalize'], { help: "Normalize code using JS_WALA before instrumenting", action:'storeTrue' } );
 parser.addArgument(['inputDir'], { help: "directory containing files to instrument"});
 parser.addArgument(['outputDir'], { help: "directory in which to create instrumented copy"});
 
@@ -231,6 +237,9 @@ if (args.selenium) {
 }
 if (args.relative) {
     relative = args.relative;
+}
+if (args.normalize) {
+    normalize = args.normalize;
 }
 if (args.instrumentInline) {
 	instrumentInline = args.instrumentInline;

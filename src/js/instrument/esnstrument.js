@@ -1336,7 +1336,7 @@
     }
 
     function instrumentFile() {
-        var args = process.argv, i;
+        var args = process.argv, i, normalize = false;
         var fs = require('fs');
         var path = require('path');
 
@@ -1364,7 +1364,12 @@
 
 
         openIIDMapFile();
-        for (i = 2; i < args.length; i++) {
+        i = 2;
+        if (args[i] === '--normalize') {
+            normalize = true;
+            i = 3;
+        }
+        for ( ; i < args.length; i++) {
             var filename = args[i];
             writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
@@ -1374,7 +1379,7 @@
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
             writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(),instCodeFileName)) + "\";\n");
-            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined], true);
+            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined], normalize);
             //console.log(JSON.stringify(newAst, null, '\t'));
 
             var newFileOnly = path.basename(instCodeFileName);

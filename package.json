@@ -8,14 +8,15 @@
         "websocket":"*",
         "source-map":"*",
         "estraverse":"*",
-        "escodegen":"http://github.com/Constellation/escodegen/tarball/master",
+        "escodegen":"https://github.com/Constellation/escodegen/tarball/master",
         "execSync":"*",
         "amdefine":"*",
         "argparse": "*",
         "mkdirp": "*",
         "ncp": "*",
         "rewriting-proxy": "*",
-        "mocha": "*"
+        "mocha": "*",
+        "js_wala": "https://github.com/wala/JS_WALA/tarball/master"
     },
     "scripts": {
       "test": "./node_modules/.bin/mocha node_test/*.js && python scripts/runalltests.py"
